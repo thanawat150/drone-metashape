@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "preview",
+  "label_th": "Preview — ตรวจสอบเร็ว",
+  "description": "อิงงาน align-only ของ 37-STC; สร้าง DEM จาก tie points โดยไม่สร้าง depth maps",
+  "align": {
+    "downscale": 2,
+    "generic_preselection": true,
+    "reference_preselection": true,
+    "keypoint_limit": 30000,
+    "tiepoint_limit": 4000,
+    "guided_matching": false
+  },
+  "depth_maps": {"enabled": false, "downscale": 4, "filter_mode": "mild"},
+  "dem": {"source": "tie_points"},
+  "orthomosaic": {"surface": "elevation", "fill_holes": true},
+  "hardware": {"cpu_enabled": true, "gpu_mode": "auto"},
+  "qa": {"alignment_pass_ratio": 0.85, "alignment_warning_ratio": 0.6}
+}

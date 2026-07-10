@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "host": "127.0.0.1",
+  "port": 8765,
+  "metashape_executable": "",
+  "default_crs": "EPSG:32647",
+  "default_profile": "standard",
+  "default_output_folder_name": "Agisoft_Output",
+  "alignment_pass_ratio": 0.85,
+  "alignment_warning_ratio": 0.6,
+  "telegram_enabled": false,
+  "close_metashape_when_finished": true,
+  "max_active_jobs": 1
+}

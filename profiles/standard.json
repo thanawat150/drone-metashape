@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "standard",
+  "label_th": "Standard — ใช้งานทั่วไป",
+  "description": "อิง full pipeline ของ 37-STC; ต้องยืนยัน API และค่ากับ Metashape รุ่นจริงใน Phase 5",
+  "align": {
+    "downscale": 1,
+    "generic_preselection": true,
+    "reference_preselection": true,
+    "keypoint_limit": 40000,
+    "tiepoint_limit": 4000,
+    "guided_matching": false
+  },
+  "depth_maps": {"enabled": true, "downscale": 4, "filter_mode": "mild"},
+  "dem": {"source": "depth_maps"},
+  "orthomosaic": {"surface": "elevation", "fill_holes": true},
+  "hardware": {"cpu_enabled": true, "gpu_mode": "auto"},
+  "qa": {"alignment_pass_ratio": 0.85, "alignment_warning_ratio": 0.6}
+}
