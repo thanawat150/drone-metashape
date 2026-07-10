@@ -90,6 +90,8 @@ def start_stage(state: dict[str, Any], stage: str) -> dict[str, Any]:
     entry.update(status="running", started_at=now, finished_at=None, elapsed_seconds=None, warning=None, error=None)
     updated["current_stage"] = stage
     updated["overall_status"] = "running"
+    updated["error"] = None
+    updated["finished_at"] = None
     updated["started_at"] = updated["started_at"] or now
     updated["updated_at"] = now
     return updated
