@@ -1,0 +1,10 @@
+.agents/
+.codex/
+outputs/
+*.log
+*.tmp
+*.tif
+*.tiff
+*.psx
+*.files/
+
