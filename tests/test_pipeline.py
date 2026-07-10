@@ -79,6 +79,7 @@ def test_dem_failure_retries_once_with_same_profile(tmp_path):
     assert adapter.calls.count("DEM") == 2
     assert state["retry_count"] == 1
     assert state["overall_status"] == "completed"
+    assert state["error"] is None
 
 
 def test_retry_failure_stops_and_generates_diagnostics(tmp_path):

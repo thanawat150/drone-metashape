@@ -11,7 +11,7 @@ from typing import Any, Callable
 from .adapter import PipelineAdapter, RetryableStageError
 from .diagnostics import create_diagnostic_package
 from .notifier import NoOpNotifier, Notifier, notify_safely
-from .state_manager import StateManager, finish_stage
+from .state_manager import StateManager, finish_stage, utc_now
 from .validators import (
     StageValidationError, classify_alignment, validate_added_photos,
     validate_export, validate_preflight,
@@ -89,14 +89,24 @@ class Pipeline:
                 return
             except Exception as exc:
                 detail = f"{type(exc).__name__}: {exc}"
-                self.state.finish(stage, "failed", elapsed_seconds=time.monotonic() - started, error=detail)
-                self.log(f"{stage} failed: {detail}")
                 if isinstance(exc, RetryableStageError) and attempt == 0:
                     state = self.state.read()
+                    now = utc_now()
+                    state["stages"][stage].update(
+                        status="failed", finished_at=now,
+                        elapsed_seconds=time.monotonic() - started, error=detail,
+                    )
                     state["retry_count"] += 1
+                    state["overall_status"] = "running"
+                    state["error"] = None
+                    state["finished_at"] = None
+                    state["updated_at"] = now
                     self.state.write(state)
+                    self.log(f"{stage} transient failure: {detail}")
                     self.log(f"{stage} retrying once with unchanged profile")
                     continue
+                self.state.finish(stage, "failed", elapsed_seconds=time.monotonic() - started, error=detail)
+                self.log(f"{stage} failed: {detail}")
                 trace = traceback.format_exc()
                 diagnostic = self._diagnose(trace)
                 self._notify(f"{self.job.plot_code}: ERROR {stage}: {detail}")

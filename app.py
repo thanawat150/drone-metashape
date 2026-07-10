@@ -9,6 +9,7 @@ import os
 import re
 import threading
 import uuid
+import webbrowser
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
@@ -18,6 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from metashape_pipeline.adapter import MockAdapter
+from metashape_pipeline.configuration import load_merged_config
 from metashape_pipeline.job_config import JobConfig, JobValidationError
 from metashape_pipeline.launcher import launch_metashape
 from metashape_pipeline.pipeline import Pipeline, PipelineCancelled, PipelineFailed
@@ -39,13 +41,7 @@ MOCK_SCENARIOS = {
 
 
 def load_config(root: Path) -> dict[str, Any]:
-    local = root / "config.local.json"
-    source = local if local.is_file() else APP_ROOT / "config.example.json"
-    with source.open("r", encoding="utf-8") as handle:
-        config = json.load(handle)
-    if config.get("host") != "127.0.0.1":
-        raise ValueError("host must remain 127.0.0.1 in this local application")
-    return config
+    return load_merged_config(root if (root / "config.example.json").is_file() else APP_ROOT)
 
 
 def native_folder_picker() -> str | None:
@@ -340,6 +336,20 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     config = load_config(APP_ROOT)
     import uvicorn
+    if not args.no_browser:
+        def open_when_ready():
+            import time
+            import urllib.request
+            url = f"http://127.0.0.1:{config['port']}/api/health"
+            for _ in range(100):
+                try:
+                    with urllib.request.urlopen(url, timeout=0.5) as response:
+                        if response.status == 200:
+                            webbrowser.open(f"http://127.0.0.1:{config['port']}/")
+                            return
+                except OSError:
+                    time.sleep(0.1)
+        threading.Thread(target=open_when_ready, daemon=True).start()
     uvicorn.run(create_app(mock_mode=args.mock_metashape), host="127.0.0.1", port=int(config["port"]))
     return 0
 

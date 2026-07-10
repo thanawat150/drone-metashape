@@ -148,3 +148,31 @@ def test_overwrite_requires_explicit_confirmation(api, tmp_path):
     (output / "28-VSD.psx").write_bytes(b"existing")
     response = client.post("/api/jobs", json=create_payload(folder, output_dir=str(output), conflict_policy="overwrite"))
     assert response.status_code == 409
+
+
+@pytest.mark.parametrize("scenario, status, stage_status", [
+    ("alignment_warning", "completed", "warning"),
+    ("retry_then_success", "completed", "passed"),
+    ("dem_failure", "failed", "failed"),
+])
+def test_mock_end_to_end_scenarios(api, tmp_path, scenario, status, stage_status):
+    client, _, _ = api
+    folder = make_photos(tmp_path)
+    job_id = client.post("/api/jobs", json=create_payload(folder, mock_scenario=scenario)).json()["job_id"]
+    state = wait_for(client, job_id)
+    assert state["overall_status"] == status
+    stage = "ALIGN" if scenario == "alignment_warning" else "DEM"
+    assert state["stages"][stage]["status"] == stage_status
+
+
+def test_job_history_survives_application_restart(tmp_path):
+    folder = make_photos(tmp_path)
+    first_app = create_app(data_root=tmp_path, profiles_dir=APP_ROOT / "profiles", mock_mode=True, picker=lambda: None, opener=lambda path: None)
+    with TestClient(first_app) as first:
+        job_id = first.post("/api/jobs", json=create_payload(folder)).json()["job_id"]
+        wait_for(first, job_id)
+    second_app = create_app(data_root=tmp_path, profiles_dir=APP_ROOT / "profiles", mock_mode=True, picker=lambda: None, opener=lambda path: None)
+    with TestClient(second_app) as second:
+        history = second.get("/api/jobs").json()
+        assert history[0]["job_id"] == job_id
+        assert history[0]["overall_status"] == "completed"
