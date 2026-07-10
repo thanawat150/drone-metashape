@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>สร้าง Orthomosaic จากภาพโดรน</title>
+  <link rel="stylesheet" href="/web/styles.css">
+</head>
+<body>
+  <header>
+    <div><span class="eyebrow">LOCAL PROCESSING</span><h1>Drone Orthomosaic</h1></div>
+    <div id="mode-badge" class="badge hidden">โหมดทดสอบ — ไม่ได้เรียก Agisoft Metashape จริง</div>
+  </header>
+  <main>
+    <section class="panel setup">
+      <div class="section-title"><span>1</span><div><h2>เลือกชุดภาพ</h2><p>ภาพทั้งหมดจะประมวลผลบนเครื่องนี้เท่านั้น</p></div></div>
+      <div class="folder-row"><input id="photo-dir" readonly placeholder="ยังไม่ได้เลือกโฟลเดอร์"><button id="choose-folder">เลือกโฟลเดอร์ภาพ</button></div>
+      <div id="warnings" class="warnings hidden"></div>
+      <div class="grid">
+        <label>รหัสแปลง<input id="plot-code" placeholder="เช่น 28-VSD"></label>
+        <label>จำนวนภาพ<input id="image-count" readonly></label>
+        <label>CRS<input id="crs" value="EPSG:32647"></label>
+        <label>พื้นที่ว่าง<input id="disk-space" readonly></label>
+        <label>Preset<select id="profile"></select></label>
+        <label>จัดการผลลัพธ์เดิม<select id="conflict-policy"><option value="require_user_choice">ให้ฉันเลือกเมื่อพบ</option><option value="version">สร้างเวอร์ชันใหม่</option><option value="resume">Resume หลังตรวจสอบ</option><option value="overwrite">เขียนทับหลังยืนยัน</option></select></label>
+      </div>
+      <label>โฟลเดอร์ผลลัพธ์<input id="output-dir"></label>
+      <label id="scenario-wrap" class="hidden">สถานการณ์จำลอง<select id="mock-scenario"><option value="success">สำเร็จ</option><option value="alignment_warning">Alignment warning</option><option value="dem_failure">DEM ล้มเหลว</option><option value="retry_then_success">Retry แล้วสำเร็จ</option><option value="permanent_failure">ล้มเหลวถาวร</option></select></label>
+      <button id="start-job" class="primary" disabled>เริ่มสร้าง Orthomosaic</button>
+    </section>
+
+    <section class="panel progress">
+      <div class="section-title"><span>2</span><div><h2>สถานะการประมวลผล</h2><p id="job-summary">ยังไม่มีงาน</p></div></div>
+      <ol id="timeline"></ol>
+      <div id="error-box" class="error-box hidden"></div>
+      <div class="actions">
+        <button id="cancel-job" disabled>หยุดหลังจบขั้นตอนปัจจุบัน</button>
+        <button id="open-output" disabled>เปิดโฟลเดอร์ผลลัพธ์</button>
+        <button id="show-log" disabled>ดู Log</button>
+        <button id="open-diagnostics" disabled>เปิด Diagnostics</button>
+        <button id="retry-job" disabled>ลองประมวลผลใหม่</button>
+        <button id="codex-help" disabled>วิเคราะห์ปัญหาด้วย Codex</button>
+      </div>
+      <pre id="log-view" class="hidden"></pre>
+    </section>
+  </main>
+  <footer>ทำงานบน <strong>127.0.0.1</strong> · ไม่มีการส่งภาพขึ้น Cloud</footer>
+  <script src="/web/app.js"></script>
+</body>
+</html>
