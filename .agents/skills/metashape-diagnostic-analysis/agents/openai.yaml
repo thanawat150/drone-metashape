@@ -1,0 +1,4 @@
+interface:
+  display_name: "Metashape Diagnostic Analysis"
+  short_description: "Analyze one failed Metashape job safely"
+  default_prompt: "Use $metashape-diagnostic-analysis to analyze this failed job package and recommend the safest next action."

@@ -3,6 +3,8 @@ name: drone-orthomosaic-metashape
 description: Workflow for continuing or running Agisoft Metashape drone orthomosaic jobs from opening the project through add photos, alignment, DEM, orthomosaic, GeoTIFF export, project save, program close, Telegram notification, and automation cleanup. Use when the user asks to stitch drone photos, continue an Agisoft/Metashape job, verify an orthomosaic pipeline, or close an automation after completion.
 ---
 
+> **Legacy reference:** Repository agent instructions now live in `AGENTS.md`. Reusable Codex workflows are registered in `skills/README.md` and stored under `.agents/skills/`. This file is retained as historical operational workflow reference and is not the canonical repository governance file.
+
 # Drone Orthomosaic With Agisoft Metashape
 
 Use this workflow when processing a drone plot in Agisoft Metashape from start to finish. Prefer the existing project and output naming pattern in `C:\Users\TC0192\Downloads\Drone_Orthomosaic`.

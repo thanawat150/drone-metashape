@@ -1,4 +1,6 @@
-.agents/
+.agents/*
+!.agents/skills/
+!.agents/skills/**
 .codex/
 outputs/
 config.local.json

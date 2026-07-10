@@ -1,0 +1,4 @@
+interface:
+  display_name: "Metashape Runtime Validation"
+  short_description: "Validate a real installed Metashape runtime safely"
+  default_prompt: "Use $metashape-runtime-validation to validate this application against the installed Metashape version with a copied test dataset."

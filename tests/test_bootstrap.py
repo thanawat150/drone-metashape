@@ -80,3 +80,6 @@ def test_start_bat_and_docs_exist():
     assert "%~dp0" in text
     assert (ROOT / "README.md").is_file()
     assert (ROOT / "docs" / "release-checklist.md").is_file()
+    assert (ROOT / "AGENTS.md").is_file()
+    assert (ROOT / ".agents" / "skills" / "drone-metashape-local-one-click" / "SKILL.md").is_file()
+    assert not (ROOT / "skills" / "drone-metashape-local-one-click" / "SKILL.md").exists()

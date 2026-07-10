@@ -2,7 +2,7 @@
 
 Codex ไม่ใช่ runtime dependency ผู้ใช้ปกติใช้ `start.bat` และหน้าเว็บเท่านั้น ใช้ Codex เมื่อต้อง audit, แก้ deterministic implementation, วิเคราะห์ diagnostic package, เพิ่ม profile หรือปรับ compatibility หลัง Metashape upgrade
 
-ก่อนแก้ให้อ่าน `skills/drone-metashape-local-one-click/SKILL.md`, root `SKILLS.md`, worktree และ legacy scripts ที่เกี่ยวข้อง รักษา user changes, secrets, generated data และ `work/` ไว้
+ก่อนแก้ให้อ่าน root `AGENTS.md`, `.agents/skills/drone-metashape-local-one-click/SKILL.md`, root `SKILLS.md`, worktree และ legacy scripts ที่เกี่ยวข้อง รักษา user changes, secrets, generated data และ `work/` ไว้
 
 การวิเคราะห์ failure ควรเริ่มจาก `job.json`, `state.json`, `profile.json`, `error.txt`, `processing.log`, `environment.json` และ `summary.md` แยกสิ่งที่ verified จาก assumed และห้ามรัน AI-generated code โดยอัตโนมัติ
 

@@ -1,15 +1,26 @@
 ---
 name: drone-metashape-local-one-click
-description: Implement and maintain this repository as a local Windows one-click Agisoft Metashape orthomosaic application, including legacy audit, schemas, pipeline, local API/UI, validation, recovery, diagnostics, mock tests, and compatibility work.
+description: Implement and maintain the local Windows one-click drone Orthomosaic application. Use for application architecture, job/profile/state schemas, deterministic pipeline changes, mock adapter behavior, localhost API, Thai web UI, launcher, output safety, automated tests, documentation, and non-version-specific Metashape integration.
 ---
 
 # Drone Metashape Local One-Click
+
+Follow root and nearest scoped `AGENTS.md` files. Keep Codex out of the normal processing path.
 
 ## Mission
 
 Turn this repository's four plot-specific scripts in `work/` into a local Windows application where a user launches `start.bat`, selects a drone-image folder in a Thai-first localhost UI, reviews detected metadata, starts one deterministic Metashape job, monitors stages, and opens saved outputs. Normal processing must not require Codex or any cloud service.
 
 The root `SKILLS.md` is the legacy operational workflow. Preserve it and deliberately migrate useful deterministic behavior into the application and documentation.
+
+## Scope exclusions
+
+Do not use this skill for:
+
+- real installed-version/API/CLI compatibility claims; use `metashape-runtime-validation`;
+- diagnostic-package-only analysis; use `metashape-diagnostic-analysis`;
+- processing production data;
+- automatically executing AI-generated fixes.
 
 ## Mandatory working method
 

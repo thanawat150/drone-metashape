@@ -1,0 +1,4 @@
+interface:
+  display_name: "Drone Metashape Local One-Click"
+  short_description: "Build and maintain the local Metashape workflow"
+  default_prompt: "Use $drone-metashape-local-one-click to implement and verify a safe local Metashape workflow change."
