@@ -67,6 +67,9 @@ def validate_profile(data: dict[str, Any]) -> dict[str, Any]:
     _require(hardware, "cpu_enabled", bool, "hardware")
     if _require(hardware, "gpu_mode", str, "hardware") not in GPU_MODES:
         raise ProfileValidationError("unsupported hardware.gpu_mode")
+    odm_args = data.get("odm_args", [])
+    if not isinstance(odm_args, list) or not all(isinstance(item, str) for item in odm_args):
+        raise ProfileValidationError("odm_args must be a list of strings")
     return data
 
 

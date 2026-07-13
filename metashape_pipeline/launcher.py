@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .adapter import MockAdapter, RealMetashapeAdapter
+from .adapter import MockAdapter, ODMAdapter, RealMetashapeAdapter
 from .job_config import JobConfig
 from .pipeline import Pipeline, PipelineCancelled, PipelineFailed
 from .profiles import load_profile
@@ -63,7 +63,11 @@ def launch_metashape(
     return process
 
 
-def run_job(job_path: str | Path, profiles_dir: str | Path, *, mock: bool = False, scenario: str = "success") -> dict[str, Any]:
+def run_job(
+    job_path: str | Path, profiles_dir: str | Path, *, mock: bool = False,
+    scenario: str = "success", engine: str = "metashape",
+    engine_config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     job_file = Path(job_path).resolve(strict=True)
     job = JobConfig.from_json(job_file)
     profile = load_profile(job.profile, profiles_dir)
@@ -77,7 +81,12 @@ def run_job(job_path: str | Path, profiles_dir: str | Path, *, mock: bool = Fals
     if scenario not in scenarios:
         raise ValueError(f"unknown mock scenario: {scenario}")
     alignment = 0.70 if scenario == "alignment_warning" else 1.0
-    adapter = MockAdapter(alignment_ratio=alignment, fail_plan=scenarios[scenario]) if mock else RealMetashapeAdapter()
+    if mock:
+        adapter = MockAdapter(alignment_ratio=alignment, fail_plan=scenarios[scenario])
+    elif engine == "odm":
+        adapter = ODMAdapter(config=engine_config)
+    else:
+        adapter = RealMetashapeAdapter()
     manager = StateManager(state_path)
     if not state_path.exists():
         manager.create(job.job_id)
@@ -93,13 +102,16 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--profiles", default=str(APP_ROOT / "profiles"))
     parser.add_argument("--mock", action="store_true", help="use the explicit non-Metashape adapter")
     parser.add_argument("--scenario", default="success")
+    parser.add_argument("--engine", default="metashape", choices=("metashape", "odm"))
+    parser.add_argument("--engine-config", default=None)
     return parser
 
 
 def metashape_main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
-        run_job(args.job, args.profiles, mock=args.mock, scenario=args.scenario)
+        engine_config = json.loads(args.engine_config) if args.engine_config else None
+        run_job(args.job, args.profiles, mock=args.mock, scenario=args.scenario, engine=args.engine, engine_config=engine_config)
         return 0
     except (PipelineFailed, PipelineCancelled, ValueError) as exc:
         print(str(exc), file=sys.stderr)
@@ -108,9 +120,9 @@ def metashape_main(argv: list[str] | None = None) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    if not args.mock:
+    if not args.mock and args.engine != "odm":
         print(
-            "Normal Python cannot run the real adapter. Launch through the configured Metashape executable or use --mock.",
+            "Normal Python cannot run the real Metashape adapter. Use --engine odm or launch through Metashape.",
             file=sys.stderr,
         )
         return 2

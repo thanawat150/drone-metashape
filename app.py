@@ -1,4 +1,4 @@
-"""Localhost-only API and Thai web UI for deterministic Metashape jobs."""
+"""Localhost-only API and Thai web UI for deterministic drone orthomosaic jobs."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from metashape_pipeline.adapter import MockAdapter
+from metashape_pipeline.adapter import MockAdapter, ODMAdapter
 from metashape_pipeline.configuration import load_merged_config
 from metashape_pipeline.job_config import JobConfig, JobValidationError
 from metashape_pipeline.launcher import launch_metashape
@@ -147,8 +147,9 @@ class LocalJobService:
         policy = payload.get("conflict_policy", "require_user_choice")
         if policy == "version":
             output = self._versioned_output(output)
+        project_suffix = ".odm_project.json" if self.config.get("engine", "odm") == "odm" else ".psx"
         paths = {
-            "project_path": str(output / f"{plot_code}.psx"),
+            "project_path": str(output / f"{plot_code}{project_suffix}"),
             "orthomosaic_path": str(output / f"{plot_code}_orthomosaic.tif"),
             "report_path": str(output / f"{plot_code}_report.pdf"),
         }
@@ -207,6 +208,16 @@ class LocalJobService:
                     state_manager=StateManager(state_path), log_path=log_path,
                     diagnostics_root=self.diagnostics_root,
                 ).run()
+            elif self.config.get("engine", "odm") == "odm":
+                def odm_log(message: str) -> None:
+                    with Path(log_path).open("a", encoding="utf-8") as handle:
+                        handle.write(str(message) + "\n")
+                Pipeline(
+                    job=job, profile=load_profile(job.profile, self.profiles_dir),
+                    adapter=ODMAdapter(config=self.config, log=odm_log),
+                    state_manager=StateManager(state_path), log_path=log_path,
+                    diagnostics_root=self.diagnostics_root,
+                ).run()
             else:
                 executable = self.config.get("metashape_executable")
                 if not executable:
@@ -257,7 +268,7 @@ def create_app(
     mock_mode: bool = False, picker: Callable[[], str | None] = native_folder_picker,
     opener: Callable[[Path], None] = default_opener,
 ) -> FastAPI:
-    app = FastAPI(title="Drone Metashape Local", docs_url=None, redoc_url=None)
+    app = FastAPI(title="Drone Orthomosaic Local", docs_url=None, redoc_url=None)
     service = LocalJobService(
         data_root=Path(data_root), profiles_dir=Path(profiles_dir), mock_mode=mock_mode,
         picker=picker, opener=opener,
@@ -266,7 +277,12 @@ def create_app(
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "mock_mode": service.mock_mode, "host": "127.0.0.1"}
+        return {
+            "status": "ok",
+            "mock_mode": service.mock_mode,
+            "engine": service.config.get("engine", "odm"),
+            "host": "127.0.0.1",
+        }
 
     @app.post("/api/select-folder")
     async def select_folder():

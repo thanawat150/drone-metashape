@@ -15,5 +15,6 @@
   "dem": {"source": "tie_points"},
   "orthomosaic": {"surface": "elevation", "fill_holes": true},
   "hardware": {"cpu_enabled": true, "gpu_mode": "auto"},
-  "qa": {"alignment_pass_ratio": 0.85, "alignment_warning_ratio": 0.6}
+  "qa": {"alignment_pass_ratio": 0.85, "alignment_warning_ratio": 0.6},
+  "odm_args": ["--fast-orthophoto", "--feature-quality", "low", "--orthophoto-resolution", "10"]
 }

@@ -1,10 +1,11 @@
-"""Windows-friendly bootstrap used by start.bat."""
+﻿"""Windows-friendly bootstrap used by start.bat."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -30,7 +31,7 @@ def requirements_fingerprint(path: Path = REQUIREMENTS) -> str:
 
 def dependencies_available(python: Path) -> bool:
     result = subprocess.run(
-        [str(python), "-c", "import fastapi, uvicorn"],
+        [str(python), "-c", "import fastapi, uvicorn; fastapi.FastAPI(docs_url=None, redoc_url=None)"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=False,
     )
     return result.returncode == 0
@@ -38,7 +39,10 @@ def dependencies_available(python: Path) -> bool:
 
 def ensure_environment() -> Path:
     if sys.version_info < (3, 11) or sys.version_info >= (3, 14):
-        raise RuntimeError("รองรับ Python 3.11–3.13 เท่านั้น")
+        raise RuntimeError("เธฃเธญเธเธฃเธฑเธ Python 3.11โ€“3.13 เน€เธ—เนเธฒเธเธฑเนเธ")
+    current_python = Path(sys.executable)
+    if dependencies_available(current_python):
+        return current_python
     python = venv_python()
     if not python.is_file():
         subprocess.run([sys.executable, "-m", "venv", str(VENV)], check=True, shell=False)
@@ -70,22 +74,26 @@ def wait_for_health(url: str, process: subprocess.Popen, timeout: float = 30) ->
         if payload := health(url):
             return payload
         if process.poll() is not None:
-            raise RuntimeError(f"backend หยุดทำงานด้วย exit code {process.returncode}")
+            raise RuntimeError(f"backend stopped with exit code {process.returncode}")
         time.sleep(0.2)
-    raise RuntimeError("backend ไม่พร้อมภายในเวลาที่กำหนด")
+    raise RuntimeError("backend was not ready before timeout")
 
 
-def configure_metashape_if_needed(mock_mode: bool) -> None:
+def configure_engine_if_needed(mock_mode: bool) -> None:
     if mock_mode:
         return
     sys.path.insert(0, str(APP_ROOT))
-    from metashape_pipeline.configuration import (
-        discover_metashape, load_merged_config, pick_metashape_executable, save_local_config,
-    )
+    from metashape_pipeline.configuration import load_merged_config
     config = load_merged_config(APP_ROOT)
+    if config.get("engine", "odm") == "odm":
+        executable = str(config.get("odm_executable") or "docker")
+        if shutil.which(executable) is None and not Path(executable).is_file():
+            print("Warning: Docker/ODM engine was not found. The UI can open, but real processing needs Docker Desktop.")
+        return
+    from metashape_pipeline.configuration import discover_metashape, pick_metashape_executable, save_local_config
     executable = discover_metashape(config, picker=pick_metashape_executable)
     if not executable:
-        raise RuntimeError("ไม่พบ Agisoft Metashape executable หรือไฟล์ที่เลือกไม่ถูกต้อง")
+        raise RuntimeError("เนเธกเนเธเธ Agisoft Metashape executable เธซเธฃเธทเธญเนเธเธฅเนเธ—เธตเนเน€เธฅเธทเธญเธเนเธกเนเธ–เธนเธเธ•เนเธญเธ")
     if config.get("metashape_executable") != str(executable):
         config["metashape_executable"] = str(executable)
         save_local_config(APP_ROOT, config)
@@ -99,14 +107,14 @@ def main(argv: list[str] | None = None) -> int:
     STARTUP_LOG.parent.mkdir(parents=True, exist_ok=True)
     try:
         python = ensure_environment()
-        configure_metashape_if_needed(args.mock_metashape)
+        configure_engine_if_needed(args.mock_metashape)
         sys.path.insert(0, str(APP_ROOT))
         from metashape_pipeline.configuration import load_merged_config
         config = load_merged_config(APP_ROOT)
         base_url = f"http://127.0.0.1:{config['port']}"
         health_url = base_url + "/api/health"
         if existing := health(health_url):
-            print("แอปกำลังทำงานอยู่แล้ว — จะเปิดหน้าต่างเดิม")
+            print("App is already running; opening the existing window.")
             if not args.no_browser:
                 webbrowser.open(base_url + "/")
             return 0
@@ -119,15 +127,16 @@ def main(argv: list[str] | None = None) -> int:
                 shell=False, close_fds=True,
             )
             wait_for_health(health_url, process)
-            print(f"พร้อมใช้งาน: {base_url}/")
+            print(f"Ready: {base_url}/")
             if not args.no_browser:
                 webbrowser.open(base_url + "/")
             return process.wait()
     except Exception as exc:
-        message = f"เริ่มโปรแกรมไม่สำเร็จ: {type(exc).__name__}: {exc}\nดู log ที่ {STARTUP_LOG}"
+        message = f"Startup failed: {type(exc).__name__}: {exc}\nSee log: {STARTUP_LOG}"
         print(message, file=sys.stderr)
         return 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

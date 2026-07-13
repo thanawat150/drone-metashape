@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import time
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
@@ -62,7 +63,14 @@ def atomic_write_json(path: str | Path, data: dict[str, Any]) -> None:
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temp_name, destination)
+        for attempt in range(8):
+            try:
+                os.replace(temp_name, destination)
+                break
+            except PermissionError:
+                if attempt == 7:
+                    raise
+                time.sleep(0.05 * (attempt + 1))
     except BaseException:
         try:
             os.unlink(temp_name)
@@ -72,8 +80,18 @@ def atomic_write_json(path: str | Path, data: dict[str, Any]) -> None:
 
 
 def read_state(path: str | Path) -> dict[str, Any]:
-    with Path(path).open("r", encoding="utf-8") as handle:
-        state = json.load(handle)
+    source = Path(path)
+    last_error: PermissionError | None = None
+    for attempt in range(8):
+        try:
+            with source.open("r", encoding="utf-8") as handle:
+                state = json.load(handle)
+            break
+        except PermissionError as exc:
+            last_error = exc
+            time.sleep(0.05 * (attempt + 1))
+    else:
+        raise last_error or PermissionError(source)
     if state.get("schema_version") != 1 or set(state.get("stages", {})) != set(STAGES):
         raise ValueError("unsupported or invalid state file")
     return state

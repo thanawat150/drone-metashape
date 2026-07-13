@@ -48,7 +48,9 @@ def create_payload(folder: Path, **changes):
 
 def test_health_and_thai_ui(api):
     client, _, _ = api
-    assert client.get("/api/health").json() == {"status": "ok", "mock_mode": True, "host": "127.0.0.1"}
+    assert client.get("/api/health").json() == {
+        "status": "ok", "mock_mode": True, "engine": "odm", "host": "127.0.0.1"
+    }
     page = client.get("/")
     assert page.status_code == 200
     assert "เริ่มสร้าง Orthomosaic" in page.text
